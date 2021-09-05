@@ -1,19 +1,18 @@
 use std::env;
 use std::io;
+use std::collections::HashMap;
+use walkdir::{ DirEntry, WalkDir };
 
-fn hash () {
-
-}
-
-fn is_folder (folder_path: &str) -> io::Result<()> {
-    Ok(())
+struct File {
+    path: String
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let folder = args.get(1).unwrap();
+    let nested_files = WalkDir::new(folder)
+        .into_iter()
+        .filter_entry(|entry| entry.metadata().unwrap().is_file());
 
-    is_folder(folder);
-
-    println!("{}", folder);
+    let mut hashes: HashMap<&str, File> = HashMap::new();
 }
