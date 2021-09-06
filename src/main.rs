@@ -29,6 +29,7 @@ fn sha512_digest<R: Read>(mut reader: R) -> io::Result<Digest> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let folder = args.get(1).unwrap();
+    let mut hashes: HashMap<String, String> = HashMap::new();
     
     for file in WalkDir::new(folder)
                         .into_iter()
@@ -39,7 +40,7 @@ fn main() {
         let digest = sha512_digest(reader).unwrap();
                         
         println!("SHA-512 digest is {}", HEXUPPER.encode(digest.as_ref()));
-    }
 
-    let mut hashes: HashMap<&str, File> = HashMap::new();
+        hashes.insert(HEXUPPER.encode(digest.as_ref()), file.path().to_str().unwrap().to_string());
+    }
 }
