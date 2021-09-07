@@ -36,7 +36,6 @@ fn main() {
         let digest = sha512_digest(reader).unwrap();
         let hash = HEXUPPER.encode(digest.as_ref());
         let file_path_as_string = file_path.to_str().unwrap().to_string();
-        println!("SHA-512 digest is {}", hash);
 
         hashes
             .entry(hash)
@@ -44,7 +43,9 @@ fn main() {
             .or_insert(vec![file_path_as_string]);
     }
 
-    hashes.iter().enumerate().for_each(|(index, paths)| {
-        println!("File {} = {:?}", index, paths);
+    hashes.iter().for_each(|(index, paths)| {
+        if paths.len() > 1 {
+            println!("Found the same files with hash {} = {:?}", index, paths);
+        }
     })
 }
