@@ -1,15 +1,10 @@
-use std::env;
-use std::io::{
-    self,
-    BufReader,
-    Read,
-    Write
-};
-use std::fs::File;
-use std::collections::HashMap;
-use walkdir::{ DirEntry, WalkDir };
 use data_encoding::HEXUPPER;
 use ring::digest::{Context, Digest, SHA512};
+use std::collections::hash_map::HashMap;
+use std::env;
+use std::fs::File;
+use std::io::{self, BufReader, Read};
+use walkdir::WalkDir;
 
 fn sha512_digest<R: Read>(mut reader: R) -> io::Result<Digest> {
     let mut context = Context::new(&SHA512);
@@ -29,18 +24,27 @@ fn sha512_digest<R: Read>(mut reader: R) -> io::Result<Digest> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let folder = args.get(1).unwrap();
-    let mut hashes: HashMap<String, String> = HashMap::new();
-    
+    let mut hashes: HashMap<String, Vec<String>> = HashMap::new();
     for file in WalkDir::new(folder)
-                        .into_iter()
-                        .filter_map(|e| e.ok())
-                        .filter(|entry| entry.metadata().unwrap().is_file()) {
-        let input = File::open(file.path()).unwrap();
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.metadata().unwrap().is_file())
+    {
+        let file_path = file.path();
+        let input = File::open(file_path).unwrap();
         let reader = BufReader::new(input);
         let digest = sha512_digest(reader).unwrap();
-                        
-        println!("SHA-512 digest is {}", HEXUPPER.encode(digest.as_ref()));
+        let hash = HEXUPPER.encode(digest.as_ref());
+        let file_path_as_string = file_path.to_str().unwrap().to_string();
+        println!("SHA-512 digest is {}", hash);
 
-        hashes.insert(HEXUPPER.encode(digest.as_ref()), file.path().to_str().unwrap().to_string());
+        hashes
+            .entry(hash)
+            .and_modify(|e| e.push(file_path_as_string.clone()))
+            .or_insert(vec![file_path_as_string]);
     }
+
+    hashes.iter().enumerate().for_each(|(index, paths)| {
+        println!("File {} = {:?}", index, paths);
+    })
 }
